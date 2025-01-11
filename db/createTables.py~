@@ -1,0 +1,84 @@
+from __future__ import print_function
+
+import mysql.connector
+from mysql.connector import errorcode
+
+DB_NAME = 'project'
+
+#storing the CREATE statements in a Python dictionary called TABLES. 
+#We also define the database in a global variable called DB_NAME, which enables you to easily use a different schema. 
+
+TABLES = {}
+TABLES['users'] = (
+    "CREATE TABLE `users` ("
+    "  `usr_no` int(11) NOT NULL AUTO_INCREMENT,"
+    "  `first_name` varchar(14) NOT NULL,"
+    "  `pas_key` varchar(14) NOT NULL,"
+    "  `last_name` varchar(16) NOT NULL,"
+    "  `firm_name` varchar(16) NOT NULL,"
+    "  `email` varchar(40) NOT NULL,"
+    "  `phone_number` int(12) NOT NULL,"
+    "  PRIMARY KEY (`usr_no`)"
+    ") ENGINE=InnoDB")
+
+TABLES['projects'] = (
+    "CREATE TABLE `projects` ("
+    "  `project_no` int(11) NOT NULL AUTO_INCREMENT,"
+    "  `usr_no` int(11) NOT NULL,"
+    "  `project_name` varchar(40) NOT NULL,"
+    "  `firm` varchar(40) NOT NULL,"
+    "  `project_location` varchar(40) NOT NULL,"
+    "  PRIMARY KEY (`project_no`), UNIQUE KEY `dept_name` (`project_name`),"
+    "  CONSTRAINT FOREIGN KEY (`usr_no`) REFERENCES `users` (`usr_no`)"
+    ") ENGINE=InnoDB")
+
+TABLES['tasks'] = (
+    "CREATE TABLE `tasks` ("
+    "  `task_no` int(11) NOT NULL AUTO_INCREMENT,"
+    "  `usr_no` int(11) NOT NULL,"
+    "  `project_no` int(11) NOT NULL,"
+    "  `jobs_done` int(11) NOT NULL,"
+    "  `jobs` int(11) NOT NULL,"
+    "  `time` int(12) NOT NULL,"
+    "  `end_date` date NOT NULL,"
+    "  `task` varchar(40) NOT NULL,"
+    "  PRIMARY KEY (`task_no`),"
+    "  CONSTRAINT FOREIGN KEY (`usr_no`) REFERENCES `users` (`usr_no`),"
+    "  CONSTRAINT FOREIGN KEY (`project_no`) REFERENCES `projects` (`project_no`)"
+    ") ENGINE=InnoDB")
+
+TABLES['comments'] = (
+    "CREATE TABLE `comments` ("
+    "  `cmt_no` int(11) NOT NULL  AUTO_INCREMENT,"
+    "  `usr_no` int(11) NOT NULL,"
+    "  `task_no` int(11) NOT NULL,"
+    "  `cmnt` varchar(40) NOT NULL,"
+    "  `from_date` date NOT NULL,"
+    "  PRIMARY KEY (`cmt_no`),"
+    "  CONSTRAINT FOREIGN KEY (`usr_no`) REFERENCES `users` (`usr_no`),"
+    "  CONSTRAINT FOREIGN KEY (`task_no`) REFERENCES `tasks` (`task_no`)"
+    ") ENGINE=InnoDB")
+
+#create cnx and cursor
+cnx = mysql.connector.connect(user='project1', password='password123',
+                            host='127.0.0.1',
+                            database='project')
+cursor = cnx.cursor()
+
+#create tables
+for table_name in TABLES:
+    table_description = TABLES[table_name]
+    try:
+        print("Creating table {}: ".format(table_name), end='')
+        cursor.execute(table_description)
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
+            print("already exists.")
+        else:
+            print(err.msg)
+    else:
+        print("OK")
+
+#clean 
+cursor.close()
+cnx.close()
